@@ -3,6 +3,7 @@
 **EMS** is an AI-powered, multilingual, voice-enabled enterprise billing and management application designed to simplify operations for local businesses. It automates **bill generation, inventory tracking, and sales analytics** while supporting **speech-based input** for enhanced accessibility.  
 
 🔗 **Live Demo:** https://ems6.netlify.app/  
+🔗 **Old site:** https://animated-taffy-b17177.netlify.app
 📝 **Academic Project — Diploma in AI & ML (2023–2026)**  
 🏫 **Government Institute of Electronics, Secunderabad**  
 
