@@ -4,6 +4,7 @@
 
 🔗 **Live Demo:** https://ems6.netlify.app/  
 🔗 **Old site:** https://animated-taffy-b17177.netlify.app
+
 📝 **Academic Project — Diploma in AI & ML (2023–2026)**  
 🏫 **Government Institute of Electronics, Secunderabad**  
 
