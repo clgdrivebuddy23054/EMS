@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kirana Store Management</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Feather Icons for proper icons -->
+    <script src="https://unpkg.com/feather-icons@4.29.0/dist/feather.min.js"></script>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1 class="app-title">Kirana Store</h1>
+            <div class="header-actions">
+                <button id="voiceBtn" class="btn btn-secondary" onclick="window.kiranaMgmt?.toggleVoiceRecognition()">
+                    <i data-feather="mic"></i> <span id="voiceStatus">Voice</span>
+                </button>
+                <button class="btn btn-secondary" onclick="window.kiranaMgmt?.toggleTheme()">
+                    <i data-feather="sun"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Tab -->
+        <div id="dashboard" class="tab-content active">
+            <div class="tab-header">
+                <h2>Dashboard</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-primary" onclick="window.kiranaMgmt?.showCartModal()">
+                        <i data-feather="shopping-cart"></i> Cart
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.kiranaMgmt?.generateBill()">
+                        <i data-feather="file-text"></i> Generate Bill
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total Sales</h3>
+                        <div class="stat-icon">
+                            <i data-feather="dollar-sign"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalSales">₹0</div>
+                    <div class="stat-change positive" id="salesChange">+12% from last month</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total Products</h3>
+                        <div class="stat-icon">
+                            <i data-feather="package"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalProducts">0</div>
+                    <div class="stat-change" id="productsChange">Active inventory</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Total Customers</h3>
+                        <div class="stat-icon">
+                            <i data-feather="users"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="totalCustomers">0</div>
+                    <div class="stat-change" id="customersChange">Registered users</div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3>Low Stock Items</h3>
+                        <div class="stat-icon">
+                            <i data-feather="alert-triangle"></i>
+                        </div>
+                    </div>
+                    <div class="stat-value" id="lowStock">0</div>
+                    <div class="stat-change warning" id="lowStockChange">Need restocking</div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="dashboard-section">
+                <h3>Quick Actions</h3>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="window.kiranaMgmt?.showAddProductModal()">
+                        <i data-feather="plus"></i> Add Product
+                    </button>
+                    <button class="btn btn-primary" onclick="window.kiranaMgmt?.showAddCustomerModal()">
+                        <i data-feather="user-plus"></i> Add Customer
+                    </button>
+                    <button class="btn btn-success" onclick="window.kiranaMgmt?.showCartModal()">
+                        <i data-feather="shopping-cart"></i> New Sale
+                    </button>
+                    <button class="btn btn-secondary" onclick="window.kiranaMgmt?.exportData()">
+                        <i data-feather="download"></i> Export Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Activities -->
+            <div class="dashboard-section">
+                <h3>Recent Activities</h3>
+                <div class="recent-activities">
+                    <div id="recentActivities">Loading recent activities...</div>
+                </div>
+            </div>
+
+            <!-- Quick Access Floating Menu -->
+            <div class="quick-access-menu" id="quickAccessMenu">
+                <div class="quick-access-trigger" onclick="window.kiranaMgmt?.toggleQuickAccess()">
+                    <i data-feather="zap"></i>
+                </div>
+                <div class="quick-access-items" id="quickAccessItems">
+                    <button class="quick-access-btn" onclick="window.kiranaMgmt?.showCartModal()" title="New Sale">
+                        <i data-feather="shopping-cart"></i>
+                    </button>
+                    <button class="quick-access-btn" onclick="window.kiranaMgmt?.showAIChatModal()" title="AI Chat">
+                        <i data-feather="message-circle"></i>
+                    </button>
+                    <button class="quick-access-btn" onclick="window.kiranaMgmt?.switchTab('settings')" title="Settings">
+                        <i data-feather="settings"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="products" class="tab-content">
+            <div class="tab-header">
+                <h2>Products</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-primary" onclick="window.kiranaMgmt?.showAddProductModal()">
+                        <i data-feather="plus"></i> Add Product
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <input type="text" id="productSearch" class="search-input" placeholder="Search products..." 
+                       onkeyup="window.kiranaMgmt?.debounce(() => window.kiranaMgmt?.filterTable('products', this.value, document.getElementById('categoryFilter').value), 300)()">
+                <select id="categoryFilter" class="filter-select" 
+                        onchange="window.kiranaMgmt?.filterTable('products', document.getElementById('productSearch').value, this.value)">
+                    <option value="">All Categories</option>
+                </select>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Unit</th>
+                            <th>Cost Price</th>
+                            <th>Selling Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr><td colspan="7">Loading products...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Sales Tab -->
+        <div id="sales" class="tab-content">
+            <div class="tab-header">
+                <h2>Sales</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-primary" onclick="window.kiranaMgmt?.showCartModal()">
+                        <i data-feather="shopping-cart"></i> New Sale
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <input type="text" id="salesSearch" class="search-input" placeholder="Search sales..." 
+                       onkeyup="window.kiranaMgmt?.debounce(() => window.kiranaMgmt?.filterSalesTable(this.value, document.getElementById('dateFilter').value), 300)()">
+                <input type="date" id="dateFilter" class="filter-select" 
+                       onchange="window.kiranaMgmt?.filterSalesTable(document.getElementById('salesSearch').value, this.value)">
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Product</th>
+                            <th>Customer</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                        <tr><td colspan="7">Loading sales...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Inventory Tab -->
+        <div id="inventory" class="tab-content">
+            <div class="tab-header">
+                <h2>Inventory</h2>
+            </div>
+
+            <div class="inventory-stats">
+                <div class="inventory-stat">
+                    <h4>Total Items</h4>
+                    <span id="inventoryTotalItems">0</span>
+                </div>
+                <div class="inventory-stat">
+                    <h4>Low Stock</h4>
+                    <span id="inventoryLowStock">0</span>
+                </div>
+                <div class="inventory-stat">
+                    <h4>Total Value</h4>
+                    <span id="inventoryTotalValue">₹0</span>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Current Stock</th>
+                            <th>Min Stock</th>
+                            <th>Status</th>
+                            <th>Value</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="inventoryTableBody">
+                        <tr><td colspan="6">Loading inventory...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Customers Tab -->
+        <div id="customers" class="tab-content">
+            <div class="tab-header">
+                <h2>Customers</h2>
+                <div class="tab-actions">
+                    <button class="btn btn-primary" onclick="window.kiranaMgmt?.showAddCustomerModal()">
+                        <i data-feather="user-plus"></i> Add Customer
+                    </button>
+                </div>
+            </div>
+
+            <div class="filters-section">
+                <input type="text" id="customerSearch" class="search-input" placeholder="Search customers..." 
+                       onkeyup="window.kiranaMgmt?.debounce(() => window.kiranaMgmt?.filterCustomersTable(this.value), 300)()">
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Total Purchases</th>
+                            <th>Loyalty Points</th>
+                            <th>Last Visit</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="customersTableBody">
+                        <tr><td colspan="6">Loading customers...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="tab-header">
+                <h2>Analytics</h2>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="analyticsChart" width="400" height="200"></canvas>
+                <div style="text-align: center; margin-top: 16px;">
+                    <select id="chartType" onchange="window.kiranaMgmt?.updateChart()">
+                        <option value="product-sales">Product Sales</option>
+                        <option value="sales-trends">Sales Trends</option>
+                        <option value="inventory-levels">Inventory Levels</option>
+                        <option value="customer-purchases">Customer Purchases</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="chart-insights">
+                <h3>Chart Insights</h3>
+                <div id="chartInsights">Loading chart insights...</div>
+            </div>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings" class="tab-content">
+            <div class="tab-header">
+                <h2>Settings</h2>
+            </div>
+
+            <div class="settings-grid">
+                <div class="setting-section">
+                    <h3>Store Information</h3>
+                    <form id="storeInfoForm" onsubmit="window.kiranaMgmt?.saveStoreInfo(); return false;">
+                        <div class="form-group">
+                            <label for="storeName">Store Name</label>
+                            <input type="text" id="storeName" name="storeName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="storeAddress">Address</label>
+                            <textarea id="storeAddress" name="storeAddress" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="storePhone">Phone</label>
+                            <input type="tel" id="storePhone" name="storePhone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="storeEmail">Email</label>
+                            <input type="email" id="storeEmail" name="storeEmail" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Save Store Info</button>
+                    </form>
+                </div>
+
+                <div class="setting-section">
+                    <h3>Data Management</h3>
+                    <div class="setting-actions">
+                        <button class="btn btn-secondary" onclick="window.kiranaMgmt?.exportData()">
+                            <i data-feather="download"></i> Export Data
+                        </button>
+                        <input type="file" id="importFile" accept=".json" style="display: none;" onchange="window.kiranaMgmt?.importData(event)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">
+                            <i data-feather="upload"></i> Import Data
+                        </button>
+                        <button class="btn btn-outline" onclick="window.kiranaMgmt?.toggleTheme()">
+                            <i data-feather="sun"></i> Toggle Theme
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" data-tab="dashboard">
+            <div class="nav-icon">
+                <i data-feather="home"></i>
+            </div>
+            <div class="nav-label">Dashboard</div>
+        </a>
+        <a href="#" class="nav-item" data-tab="products">
+            <div class="nav-icon">
+                <i data-feather="package"></i>
+            </div>
+            <div class="nav-label">Products</div>
+        </a>
+        <a href="#" class="nav-item" data-tab="sales">
+            <div class="nav-icon">
+                <i data-feather="dollar-sign"></i>
+            </div>
+            <div class="nav-label">Sales</div>
+        </a>
+        <a href="#" class="nav-item" data-tab="inventory">
+            <div class="nav-icon">
+                <i data-feather="bar-chart-2"></i>
+            </div>
+            <div class="nav-label">Inventory</div>
+        </a>
+        <a href="#" class="nav-item" data-tab="customers">
+            <div class="nav-icon">
+                <i data-feather="users"></i>
+            </div>
+            <div class="nav-label">Customers</div>
+        </a>
+        <a href="#" class="nav-item" data-tab="analytics">
+            <div class="nav-icon">
+                <i data-feather="trending-up"></i>
+            </div>
+            <div class="nav-label">Analytics</div>
+        </a>
+        <a href="#" class="nav-item" data-tab="settings">
+            <div class="nav-icon">
+                <i data-feather="settings"></i>
+            </div>
+            <div class="nav-label">Settings</div>
+        </a>
+    </nav>
+
+    <!-- Modal Overlay -->
+    <div id="modalOverlay" class="modal-overlay hidden">
+        <!-- Add Product Modal -->
+        <div id="addProductModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New Product</h3>
+                    <button class="modal-close" onclick="window.kiranaMgmt?.hideModal('addProductModal')">&times;</button>
+                </div>
+                <form onsubmit="window.kiranaMgmt?.addProduct(event)">
+                    <div class="form-group">
+                        <label for="productName">Product Name</label>
+                        <input type="text" id="productName" name="name" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productCategory">Category</label>
+                            <select id="productCategory" name="category" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="productUnit">Unit</label>
+                            <select id="productUnit" name="unit" required>
+                                <option value="kg">kg</option>
+                                <option value="L">L</option>
+                                <option value="pcs">pcs</option>
+                                <option value="pack">pack</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productStock">Current Stock</label>
+                            <input type="number" id="productStock" name="currentStock" min="0" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productMinStock">Min Stock</label>
+                            <input type="number" id="productMinStock" name="minStock" min="0" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="productCostPrice">Cost Price (₹)</label>
+                            <input type="number" id="productCostPrice" name="costPrice" min="0" step="0.01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="productSellingPrice">Selling Price (₹)</label>
+                            <input type="number" id="productSellingPrice" name="sellingPrice" min="0" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="window.kiranaMgmt?.hideModal('addProductModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Product</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Customer Modal -->
+        <div id="addCustomerModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Add New Customer</h3>
+                    <button class="modal-close" onclick="window.kiranaMgmt?.hideModal('addCustomerModal')">&times;</button>
+                </div>
+                <form onsubmit="window.kiranaMgmt?.addCustomer(event)">
+                    <div class="form-group">
+                        <label for="customerName">Customer Name</label>
+                        <input type="text" id="customerName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPhone">Phone Number</label>
+                        <input type="tel" id="customerPhone" name="phone" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress">Address</label>
+                        <textarea id="customerAddress" name="address" rows="3"></textarea>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="window.kiranaMgmt?.hideModal('addCustomerModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Customer</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Cart Modal -->
+        <div id="cartModal" class="modal large" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Shopping Cart</h3>
+                    <button class="modal-close" onclick="window.kiranaMgmt?.hideModal('cartModal')">&times;</button>
+                </div>
+                <div class="cart-content">
+                    <div class="cart-customer-select">
+                        <label for="cartCustomer">Select Customer</label>
+                        <select id="cartCustomer" class="form-control">
+                            <option value="">Walk-in Customer</option>
+                        </select>
+                    </div>
+
+                    <div class="cart-product-add">
+                        <div style="display: flex; gap: 10px; margin: 10px 0;">
+                            <select id="cartProduct" class="form-control" style="flex: 2;">
+                                <option value="">Select Product</option>
+                            </select>
+                            <input type="number" id="cartQuantity" placeholder="Qty" min="1" value="1" style="width: 80px;">
+                            <button type="button" class="btn btn-primary" onclick="window.kiranaMgmt?.addToCart()">Add to Cart</button>
+                        </div>
+                    </div>
+
+                    <div class="cart-items">
+                        <h4>Cart Items</h4>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Price</th>
+                                        <th>Quantity</th>
+                                        <th>Total</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="cartItemsBody">
+                                    <tr><td colspan="5">Cart is empty</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="cart-total">
+                        <div style="text-align: right; margin: 20px 0;">
+                            <div><strong>Subtotal: ₹<span id="cartSubtotal">0</span></strong></div>
+                            <div><strong>Tax (18%): ₹<span id="cartTax">0</span></strong></div>
+                            <div style="font-size: 18px;"><strong>Total: ₹<span id="cartTotal">0</span></strong></div>
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button type="button" class="btn btn-secondary" onclick="window.kiranaMgmt?.clearCart()">Clear Cart</button>
+                        <button type="button" class="btn btn-secondary" onclick="window.kiranaMgmt?.hideModal('cartModal')">Cancel</button>
+                        <button type="button" class="btn btn-success" onclick="window.kiranaMgmt?.processSaleFromCart()">Complete Sale</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Chat Modal -->
+        <div id="aiChatModal" class="modal large" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>AI Assistant</h3>
+                    <button class="modal-close" onclick="window.kiranaMgmt?.hideModal('aiChatModal')">&times;</button>
+                </div>
+                <div class="ai-chat-content">
+                    <div class="ai-chat-messages" id="aiChatMessages">
+                        <div class="ai-message">
+                            <div class="message-avatar">
+                                <i data-feather="cpu"></i>
+                            </div>
+                            <div class="message-content">
+                                <p>Hello! I'm your AI assistant. I can help you with:</p>
+                                <ul>
+                                    <li>Product management and inventory insights</li>
+                                    <li>Sales analysis and reporting</li>
+                                    <li>Customer data and trends</li>
+                                    <li>Business recommendations</li>
+                                </ul>
+                                <p>What would you like to know about your store?</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-chat-input">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="aiChatInputField" class="form-control" placeholder="Ask me anything about your store..." 
+                                   onkeypress="if(event.key === 'Enter') window.kiranaMgmt?.sendAIMessage()">
+                            <button class="btn btn-primary" onclick="window.kiranaMgmt?.sendAIMessage()">
+                                <i data-feather="send"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bill Preview Modal -->
+        <div id="billModal" class="modal large" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Bill Preview</h3>
+                    <button class="modal-close" onclick="window.kiranaMgmt?.hideModal('billModal')">&times;</button>
+                </div>
+                <div id="billContent" class="bill-content">
+                    <!-- Bill content will be generated here -->
+                </div>
+                <div class="modal-actions">
+                    <button class="btn btn-secondary" onclick="window.kiranaMgmt?.printBill()">
+                        <i data-feather="printer"></i> Print
+                    </button>
+                    <button class="btn btn-primary" onclick="window.kiranaMgmt?.downloadBill()">
+                        <i data-feather="download"></i> Download
+                    </button>
+                    <button class="btn btn-outline" onclick="window.kiranaMgmt?.hideModal('billModal')">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="app.js"></script>
+    <script>
+        // Initialize Feather icons
+        document.addEventListener('DOMContentLoaded', function() {
+            feather.replace();
+        });
+    </script>
+</body>
+</html>
