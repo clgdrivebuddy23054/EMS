@@ -1,0 +1,629 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏪</text></svg>" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#21808D" />
+    <title>Kirana Store Manager</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json,{
+      'name': 'Kirana Store Manager',
+      'short_name': 'Kirana Store',
+      'description': 'Complete inventory and sales management solution',
+      'start_url': '/',
+      'display': 'standalone',
+      'background_color': '#FCFCF9',
+      'theme_color': '#21808D',
+      'icons': [
+        {
+          'src': 'data:image/svg+xml,<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 100 100\"><text y=\".9em\" font-size=\"90\">🏪</text></svg>',
+          'sizes': '192x192',
+          'type': 'image/svg+xml'
+        }
+      ]
+    }" />
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-page">
+        <div class="login-container animate-in">
+            <div class="login-header">
+                <div class="login-icon animate-bounce">🏪</div>
+                <h1 class="animate-fade-in">Kirana Store Manager</h1>
+                <p class="animate-fade-in-delay">Complete inventory and sales management solution</p>
+            </div>
+            <form id="loginForm" class="login-form">
+                <div class="form-group animate-slide-up">
+                    <label class="form-label">Store Name</label>
+                    <input type="text" id="storeNameLogin" class="form-control" placeholder="Enter your store name" required>
+                </div>
+                <div class="form-group animate-slide-up-delay">
+                    <label class="form-label">Owner Name</label>
+                    <input type="text" id="ownerNameLogin" class="form-control" placeholder="Enter owner name" required>
+                </div>
+                <button type="submit" class="btn btn--primary btn--full-width animate-slide-up-delay-2">
+                    Start Managing Store
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main App (Hidden initially) -->
+    <div id="mainApp" class="main-app hidden">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="store-info">
+                    <h1 class="store-name" id="headerStoreName">Kirana Store</h1>
+                    <div class="connection-status">
+                        <span id="connectionStatus" class="status status--success">Online</span>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <button id="themeToggle" class="btn btn--secondary btn--sm theme-toggle">
+                        <span id="themeIcon">🌙</span>
+                    </button>
+                    <div class="language-toggle">
+                        <select id="languageSelect" class="form-control">
+                            <option value="en">English</option>
+                            <option value="hi">हिंदी</option>
+                            <option value="te">తెలుగు</option>
+                        </select>
+                    </div>
+                    <button id="notificationBtn" class="btn btn--secondary btn--sm notification-btn">
+                        <span class="notification-icon">🔔</span>
+                        <span id="notificationCount" class="notification-count hidden">0</span>
+                    </button>
+                    <button id="logoutBtn" class="btn btn--outline btn--sm">
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <div class="section-header">
+                    <h2 data-translate="dashboard">Dashboard</h2>
+                    <div class="date-info">
+                        <span id="currentDate"></span>
+                    </div>
+                </div>
+
+                <div class="dashboard-cards">
+                    <div class="card dashboard-card animate-card">
+                        <div class="card__body">
+                            <div class="metric-item">
+                                <div class="metric-icon">💰</div>
+                                <div class="metric-content">
+                                    <h3 data-translate="todaySales">Today's Sales</h3>
+                                    <div class="metric-value" id="todaySalesValue">₹0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card dashboard-card animate-card">
+                        <div class="card__body">
+                            <div class="metric-item">
+                                <div class="metric-icon">📊</div>
+                                <div class="metric-content">
+                                    <h3 data-translate="totalSales">Total Sales</h3>
+                                    <div class="metric-value" id="totalSalesValue">₹0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card dashboard-card animate-card">
+                        <div class="card__body">
+                            <div class="metric-item">
+                                <div class="metric-icon">💸</div>
+                                <div class="metric-content">
+                                    <h3>Total Profit</h3>
+                                    <div class="metric-value" id="totalProfitValue">₹0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card dashboard-card animate-card">
+                        <div class="card__body">
+                            <div class="metric-item">
+                                <div class="metric-icon">⚠️</div>
+                                <div class="metric-content">
+                                    <h3 data-translate="lowStock">Low Stock</h3>
+                                    <div class="metric-value" id="lowStockValue">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card dashboard-card animate-card">
+                        <div class="card__body">
+                            <div class="metric-item">
+                                <div class="metric-icon">📦</div>
+                                <div class="metric-content">
+                                    <h3 data-translate="products">Products</h3>
+                                    <div class="metric-value" id="totalProductsValue">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card animate-fade-in">
+                    <div class="card__body">
+                        <h3 data-translate="stockAlert">Stock Alerts</h3>
+                        <div id="stockAlerts" class="stock-alerts">
+                            <!-- Stock alerts will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Products Section -->
+            <section id="products" class="section">
+                <div class="section-header">
+                    <h2 data-translate="products">Products</h2>
+                    <button id="addProductBtn" class="btn btn--primary btn--sm animate-hover-scale">
+                        <span>+</span>
+                        <span data-translate="addProduct">Add Product</span>
+                    </button>
+                </div>
+
+                <div class="search-container">
+                    <input type="text" id="productSearch" class="form-control" placeholder="Search products..." data-translate-placeholder="search">
+                    <button id="voiceSearchBtn" class="btn btn--secondary btn--sm animate-hover-scale">
+                        <span>🎤</span>
+                    </button>
+                </div>
+
+                <div class="products-grid" id="productsGrid">
+                    <!-- Products will be populated here -->
+                </div>
+            </section>
+
+            <!-- Sales Section -->
+            <section id="sales" class="section">
+                <div class="section-header">
+                    <h2 data-translate="sales">Sales</h2>
+                    <button id="quickSaleBtn" class="btn btn--primary btn--sm animate-hover-scale">
+                        <span>🛒</span>
+                        <span>Quick Sale</span>
+                    </button>
+                </div>
+
+                <div class="sales-controls">
+                    <div class="voice-input-container">
+                        <button id="voiceInputBtn" class="btn btn--secondary voice-btn animate-hover-scale">
+                            <span class="voice-icon">🎤</span>
+                            <span data-translate="voiceInput">Voice Input</span>
+                        </button>
+                        <div id="voiceStatus" class="voice-status"></div>
+                        <div id="voiceTranscript" class="voice-transcript"></div>
+                        <div class="voice-help">
+                            <small>Try: "sold five rice", "sale two oil", "three dal sold"</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card animate-fade-in">
+                    <div class="card__body">
+                        <h3>Recent Sales</h3>
+                        <div id="recentSales" class="sales-list">
+                            <!-- Recent sales will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Inventory Section -->
+            <section id="inventory" class="section">
+                <div class="section-header">
+                    <h2 data-translate="inventory">Inventory</h2>
+                    <div class="inventory-actions">
+                        <button id="reorderBtn" class="btn btn--primary btn--sm animate-hover-scale">
+                            <span>📋</span>
+                            <span>Generate Reorder</span>
+                        </button>
+                        <button id="lowStockBtn" class="btn btn--secondary btn--sm animate-hover-scale">
+                            <span>⚠️</span>
+                            <span>Low Stock Alert</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="inventory-filters">
+                    <select id="categoryFilter" class="form-control enhanced-select">
+                        <option value="">All Categories</option>
+                    </select>
+                    <select id="stockFilter" class="form-control enhanced-select">
+                        <option value="">All Stock</option>
+                        <option value="low">Low Stock</option>
+                        <option value="out">Out of Stock</option>
+                    </select>
+                </div>
+
+                <div id="inventoryList" class="inventory-list">
+                    <!-- Inventory items will be populated here -->
+                </div>
+            </section>
+
+            <!-- Analytics Section -->
+            <section id="analytics" class="section">
+                <div class="section-header">
+                    <h2 data-translate="analytics">Analytics</h2>
+                    <div class="analytics-controls">
+                        <select id="periodSelect" class="form-control enhanced-select">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                        <button id="refreshAnalytics" class="btn btn--secondary btn--sm animate-hover-scale">
+                            <span>🔄</span>
+                            <span>Refresh</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="analytics-summary">
+                    <div class="summary-card animate-card">
+                        <div class="summary-icon">📈</div>
+                        <div class="summary-content">
+                            <h4>Sales Growth</h4>
+                            <div class="summary-value" id="salesGrowth">+0%</div>
+                        </div>
+                    </div>
+                    <div class="summary-card animate-card">
+                        <div class="summary-icon">💰</div>
+                        <div class="summary-content">
+                            <h4>Profit Margin</h4>
+                            <div class="summary-value" id="profitMargin">0%</div>
+                        </div>
+                    </div>
+                    <div class="summary-card animate-card">
+                        <div class="summary-icon">🔄</div>
+                        <div class="summary-content">
+                            <h4>Inventory Turnover</h4>
+                            <div class="summary-value" id="inventoryTurnover">0x</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="analytics-grid">
+                    <!-- Sales Trend Chart -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Sales Trend (Last 7 Days)</h3>
+                            <div class="chart-container">
+                                <canvas id="salesTrendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Products by Revenue -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Top Products by Revenue</h3>
+                            <div class="chart-container">
+                                <canvas id="topProductsChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Most Sold Items -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Most Sold Items</h3>
+                            <div class="chart-container">
+                                <canvas id="mostSoldChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Profit Analysis -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Profit Analysis</h3>
+                            <div class="chart-container">
+                                <canvas id="profitChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Performance -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Category Performance</h3>
+                            <div class="chart-container">
+                                <canvas id="categoryChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stock Status -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Stock Status Overview</h3>
+                            <div class="chart-container">
+                                <canvas id="stockChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Hourly Sales Pattern -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Hourly Sales Pattern</h3>
+                            <div class="chart-container">
+                                <canvas id="hourlySalesChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Revenue vs Profit -->
+                    <div class="card analytics-card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Revenue vs Profit</h3>
+                            <div class="chart-container">
+                                <canvas id="revenueProfitChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <div class="section-header">
+                    <h2 data-translate="settings">Settings</h2>
+                </div>
+
+                <div class="settings-list">
+                    <div class="card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Store Information</h3>
+                            <div class="form-group">
+                                <label class="form-label" data-translate="storeName">Store Name</label>
+                                <input type="text" id="storeNameInput" class="form-control" value="Kirana Store">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Owner Name</label>
+                                <input type="text" id="ownerNameInput" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-translate="storeAddress">Store Address</label>
+                                <textarea id="storeAddressInput" class="form-control" rows="3"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" data-translate="phoneNumber">Phone Number</label>
+                                <input type="tel" id="phoneInput" class="form-control">
+                            </div>
+                            <button id="saveStoreInfo" class="btn btn--primary animate-hover-scale">
+                                <span data-translate="save">Save</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Appearance</h3>
+                            <div class="form-group">
+                                <label class="form-label">Theme</label>
+                                <select id="themeSelect" class="form-control enhanced-select">
+                                    <option value="auto">Auto (System)</option>
+                                    <option value="light">Light</option>
+                                    <option value="dark">Dark</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Notifications</h3>
+                            <div class="form-group">
+                                <label class="form-label">Low Stock Alerts</label>
+                                <input type="checkbox" id="lowStockAlerts" checked>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Daily Sales Summary</label>
+                                <input type="checkbox" id="dailySummary" checked>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card animate-fade-in">
+                        <div class="card__body">
+                            <h3>Data Management</h3>
+                            <div class="settings-actions">
+                                <button id="backupBtn" class="btn btn--secondary animate-hover-scale">
+                                    <span data-translate="backup">Backup</span>
+                                </button>
+                                <button id="restoreBtn" class="btn btn--secondary animate-hover-scale">
+                                    <span data-translate="restore">Restore</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active animate-nav" data-section="dashboard">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label" data-translate="dashboard">Dashboard</span>
+            </button>
+            <button class="nav-item animate-nav" data-section="products">
+                <span class="nav-icon">📦</span>
+                <span class="nav-label" data-translate="products">Products</span>
+            </button>
+            <button class="nav-item animate-nav" data-section="sales">
+                <span class="nav-icon">💰</span>
+                <span class="nav-label" data-translate="sales">Sales</span>
+            </button>
+            <button class="nav-item animate-nav" data-section="inventory">
+                <span class="nav-icon">📋</span>
+                <span class="nav-label" data-translate="inventory">Inventory</span>
+            </button>
+            <button class="nav-item animate-nav" data-section="analytics">
+                <span class="nav-icon">📊</span>
+                <span class="nav-label" data-translate="analytics">Analytics</span>
+            </button>
+        </nav>
+
+        <!-- Floating Action Button -->
+        <button id="fabBtn" class="fab animate-fab">
+            <span>🛒</span>
+        </button>
+
+        <!-- Modals -->
+        <!-- Add Product Modal -->
+        <div id="addProductModal" class="modal">
+            <div class="modal-content animate-modal">
+                <div class="modal-header">
+                    <h3 data-translate="addProduct">Add Product</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="addProductForm">
+                        <div class="form-group">
+                            <label class="form-label" data-translate="productName">Product Name</label>
+                            <input type="text" id="productNameInput" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-translate="category">Category</label>
+                            <select id="productCategoryInput" class="form-control enhanced-select" required>
+                                <option value="">Select Category</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Cost Price (₹)</label>
+                            <input type="number" id="costPriceInput" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Selling Price (₹)</label>
+                            <input type="number" id="sellingPriceInput" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-translate="quantity">Quantity</label>
+                            <input type="number" id="quantityInput" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Unit</label>
+                            <select id="unitInput" class="form-control enhanced-select" required>
+                                <option value="kg">Kg</option>
+                                <option value="liter">Liter</option>
+                                <option value="piece">Piece</option>
+                                <option value="packet">Packet</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Min Stock Level</label>
+                            <input type="number" id="minStockInput" class="form-control" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--secondary" data-dismiss="modal">
+                        <span data-translate="cancel">Cancel</span>
+                    </button>
+                    <button type="submit" form="addProductForm" class="btn btn--primary">
+                        <span data-translate="save">Save</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Sale Modal -->
+        <div id="quickSaleModal" class="modal">
+            <div class="modal-content animate-modal">
+                <div class="modal-header">
+                    <h3>Quick Sale</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="quickSaleForm">
+                        <div class="form-group">
+                            <label class="form-label">Product</label>
+                            <select id="saleProductSelect" class="form-control enhanced-select" required>
+                                <option value="">Select Product</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" data-translate="quantity">Quantity</label>
+                            <input type="number" id="saleQuantityInput" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Total Amount (₹)</label>
+                            <input type="number" id="totalAmountInput" class="form-control" readonly>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--secondary" data-dismiss="modal">
+                        <span data-translate="cancel">Cancel</span>
+                    </button>
+                    <button type="submit" form="quickSaleForm" class="btn btn--primary">
+                        <span>Complete Sale</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reorder Modal -->
+        <div id="reorderModal" class="modal">
+            <div class="modal-content animate-modal">
+                <div class="modal-header">
+                    <h3>Reorder Report</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="reorderList" class="reorder-list">
+                        <!-- Reorder items will be populated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn--secondary" data-dismiss="modal">
+                        <span>Close</span>
+                    </button>
+                    <button id="exportReorder" class="btn btn--primary">
+                        <span>Export PDF</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notification Panel -->
+        <div id="notificationPanel" class="notification-panel">
+            <div class="notification-header">
+                <h3>Notifications</h3>
+                <button id="closeNotifications" class="btn btn--sm btn--secondary">&times;</button>
+            </div>
+            <div id="notificationsList" class="notifications-list">
+                <!-- Notifications will be populated here -->
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast animate-toast">
+            <div class="toast-content">
+                <span class="toast-message"></span>
+                <button class="toast-close">&times;</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
